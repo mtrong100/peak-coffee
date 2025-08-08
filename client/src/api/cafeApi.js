@@ -4,6 +4,9 @@ import axiosClient from "./axiosClient";
 // 📌 Lấy tất cả quán cafe
 export const getAllCafes = () => axiosClient.get("/cafes");
 
+// 📌 Lấy tất cả tên quán cafe
+export const getAllCafeNames = () => axiosClient.get("/cafes/names");
+
 // 📌 Lấy chi tiết 1 quán cafe theo ID
 export const getCafeById = (id) => axiosClient.get(`/cafes/${id}`);
 

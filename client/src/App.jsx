@@ -9,6 +9,8 @@ import CafeManage from "./pages/CafeManage";
 import MomentManage from "./pages/MomentManage";
 import CreateCafe from "./pages/CreateCafe";
 import UpdateCafe from "./pages/UpdateCafe";
+import CreateMoment from "./pages/CreateMoment";
+import UpdateMoment from "./pages/UpdateMoment";
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
         <Route path="/create-cafe" element={<CreateCafe />} />
         <Route path="/update-cafe/:id" element={<UpdateCafe />} />
         <Route path="/moment-manage" element={<MomentManage />} />
+        <Route path="/create-moment" element={<CreateMoment />} />
+        <Route path="/update-moment/:id" element={<UpdateMoment />} />
       </Route>
     </Routes>
   );

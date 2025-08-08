@@ -10,6 +10,7 @@ export const getAllMoments = async (req, res) => {
     const sortOption = sort === "asc" ? 1 : -1;
 
     const moments = await Moment.find(filter)
+      .populate("cafeId", "name address")
       .sort({ dateTime: sortOption })
       .skip((page - 1) * limit)
       .limit(Number(limit));

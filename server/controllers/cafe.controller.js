@@ -53,3 +53,12 @@ export const deleteCafe = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+export const getAllCoffeeNames = async (req, res) => {
+  try {
+    const coffees = await Cafe.find().select("name _id");
+    res.json(coffees);
+  } catch (err) {
+    res.status(500).json({ error: "Lỗi khi lấy danh sách quán cafe." });
+  }
+};
