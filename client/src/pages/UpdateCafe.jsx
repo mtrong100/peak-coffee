@@ -18,6 +18,11 @@ const UpdateCafe = () => {
 
   const [loading, setLoading] = useState(true);
 
+  // FIX SCROLL BUG
+  useEffect(() => {
+    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   // Lấy dữ liệu cafe hiện tại
   useEffect(() => {
     const fetchData = async () => {

@@ -53,6 +53,11 @@ const CafeManage = () => {
     sortDirection === "asc" ? a.rating - b.rating : b.rating - a.rating
   );
 
+  // FIX SCROLL BUG
+  useEffect(() => {
+    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const fetchCafes = async () => {
     try {
       const res = await getAllCafes();

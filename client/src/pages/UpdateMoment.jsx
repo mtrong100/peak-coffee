@@ -18,6 +18,11 @@ const UpdateMoment = () => {
   });
   const [cafes, setCafes] = useState([]);
 
+  // FIX SCROLL BUG
+  useEffect(() => {
+    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {

@@ -1,0 +1,64 @@
+import React from "react";
+import { MapPin, Star, Coffee, ChevronRight } from "lucide-react";
+
+const CafeCard = ({ cafe }) => {
+  return (
+    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col border border-amber-100 hover:border-amber-200 group">
+      {/* Ảnh với overlay */}
+      <div className="relative">
+        {cafe.imageUrl && (
+          <img
+            src={cafe.imageUrl}
+            alt={cafe.name}
+            className="w-full h-48 md:h-56 object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
+      </div>
+
+      {/* Nội dung */}
+      <div className="p-5 flex flex-col flex-grow">
+        {/* Tên quán */}
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-xl font-bold text-amber-900 flex items-center gap-2">
+            <Coffee size={18} className="text-amber-600" />
+            <span className="line-clamp-1">{cafe.name}</span>
+          </h3>
+          <ChevronRight
+            size={18}
+            className="text-amber-400 group-hover:text-amber-600 transition-colors"
+          />
+        </div>
+
+        {/* Địa chỉ */}
+        <p className="text-sm text-amber-800 flex items-center gap-2 mb-3">
+          <MapPin size={16} className="text-amber-600 flex-shrink-0" />
+          <span className="line-clamp-1">{cafe.address}</span>
+        </p>
+
+        {/* Mô tả */}
+        {cafe.description && (
+          <p className="font-medium text-stone-600 mb-4 line-clamp-2">
+            {cafe.description}
+          </p>
+        )}
+
+        {/* Rating và Action */}
+        <div className="mt-auto flex items-center justify-between">
+          <div className="flex items-center gap-1 bg-amber-100 px-3 py-1 rounded-full">
+            <Star size={16} className="text-amber-600 fill-amber-600" />
+            <span className="text-sm font-medium text-amber-900">
+              {cafe.rating?.toFixed(1) || "0.0"} / 5
+            </span>
+          </div>
+
+          {/* <button className="text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors">
+            Xem chi tiết
+          </button> */}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CafeCard;

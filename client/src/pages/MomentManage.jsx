@@ -26,6 +26,15 @@ const MomentManage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMoment, setSelectedMoment] = useState(null);
 
+  const [page, setPage] = useState(1);
+  const [limit] = useState(5);
+  const [total, setTotal] = useState(0);
+
+  // FIX SCROLL BUG
+  useEffect(() => {
+    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const handleViewMoment = (m) => {
     setSelectedMoment(m);
     setIsModalOpen(true);
@@ -33,9 +42,14 @@ const MomentManage = () => {
 
   const fetchMoments = async () => {
     try {
-      const res = await getAllMoments();
-      console.log(res.data);
+      const res = await getAllMoments({
+        page,
+        limit,
+        sort: sortDirection,
+        search: searchQuery,
+      });
       setMoments(res.data.data || []);
+      setTotal(res.data.total || 0);
     } catch (err) {
       console.error("Lỗi khi lấy danh sách moments:", err);
       setMoments([]);
@@ -46,7 +60,9 @@ const MomentManage = () => {
 
   useEffect(() => {
     fetchMoments();
-  }, []);
+  }, [page, sortDirection, searchQuery]);
+
+  const totalPages = Math.ceil(total / limit);
 
   const toggleSortDirection = () => {
     setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -249,6 +265,41 @@ const MomentManage = () => {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6 gap-2">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="px-4 py-2 rounded-lg border border-stone-300 text-stone-600 hover:bg-stone-100 disabled:opacity-50"
+          >
+            Trước
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`px-4 py-2 rounded-lg border ${
+                page === p
+                  ? "bg-amber-600 text-white border-amber-600"
+                  : "border-stone-300 text-stone-600 hover:bg-stone-100"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className="px-4 py-2 rounded-lg border border-stone-300 text-stone-600 hover:bg-stone-100 disabled:opacity-50"
+          >
+            Sau
+          </button>
+        </div>
+      )}
 
       {/* Modal */}
       <MomentModal

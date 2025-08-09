@@ -27,6 +27,11 @@ const CreateMoment = () => {
     dateTime: "",
   });
 
+  // FIX SCROLL BUG
+  useEffect(() => {
+    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const [cafes, setCafes] = useState([]);
 
   // Lấy danh sách cafe để fill dropdown
@@ -81,6 +86,15 @@ const CreateMoment = () => {
     } catch (err) {
       console.error("Lỗi khi tạo moment:", err);
       toast.error("Tạo không thành công");
+    } finally {
+      setFormData({
+        cafeId: "",
+        selectedDrinks: [{ drinkName: "", price: "", quantity: "" }],
+        totalPrice: "",
+        imageUrl: "",
+        description: "",
+        dateTime: "",
+      });
     }
   };
 

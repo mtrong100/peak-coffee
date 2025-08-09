@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Coffee, Save, ArrowLeft, ImagePlus, MapPin, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createCafe } from "../api/cafeApi";
@@ -15,6 +15,11 @@ const CreateCafe = () => {
     imageUrl: "",
     rating: "",
   });
+
+  // FIX SCROLL BUG
+  useEffect(() => {
+    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   // Xử lý thay đổi input
   const handleChange = (e) => {

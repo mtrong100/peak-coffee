@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import Cafe from "./pages/Cafe";
+import Moment from "./pages/MomentPage";
+import Cafe from "./pages/CafePage";
 import Dashboard from "./pages/Dashboard";
 
 import PublicLayout from "./layouts/PublicLayout";
@@ -11,13 +11,15 @@ import CreateCafe from "./pages/CreateCafe";
 import UpdateCafe from "./pages/UpdateCafe";
 import CreateMoment from "./pages/CreateMoment";
 import UpdateMoment from "./pages/UpdateMoment";
+import LandingPage from "./pages/LandingPage";
 
 function App() {
   return (
     <Routes>
       {/* Public pages use PublicLayout */}
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/moment" element={<Moment />} />
         <Route path="/cafe" element={<Cafe />} />
       </Route>
 
