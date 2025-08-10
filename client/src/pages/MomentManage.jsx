@@ -1,87 +1,139 @@
-import React, { useEffect, useState } from "react";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Search,
-  ChevronDown,
-  ChevronUp,
-  Coffee,
-  Eye,
-  Calendar,
-  Clock,
-  Wallet,
-  Bean,
-  ArrowLeft,
-  ArrowRight,
-} from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { Plus, Pencil, Trash2, Coffee, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import toast from "react-hot-toast";
+
 import { getAllMoments, deleteMoment } from "../api/momentApi";
+import { getAllCafeNames } from "../api/cafeApi";
 import { formatCurrencyVND } from "../utils/formatCurrency";
 import { formatDateTime } from "../utils/formatDateTime";
+import { getTimeOfDay } from "../utils/getTimeOfDay";
+import { debounce } from "../utils/debounce";
+
 import MomentModal from "../components/MomentModal";
+import MomentFilter from "../components/MomentFilter";
 
 const MomentManage = () => {
   const navigate = useNavigate();
-  const [moments, setMoments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [sortDirection, setSortDirection] = useState("desc");
-  const [sortOption, setSortOption] = useState("newest");
-  const [searchQuery, setSearchQuery] = useState("");
 
+  // Data state
+  const [moments, setMoments] = useState([]);
+  const [cafes, setCafes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // UI state
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMoment, setSelectedMoment] = useState(null);
 
-  const [page, setPage] = useState(1);
-  const [limit] = useState(5);
-  const [total, setTotal] = useState(0);
+  // Filter & sort state
+  const [filters, setFilters] = useState({
+    cafeId: "",
+    timeOfDay: "",
+    minPrice: "",
+    maxPrice: "",
+    dateFrom: "",
+    dateTo: "",
+  });
+  const [sortOption, setSortOption] = useState({ sortBy: "", sortOrder: "" });
 
-  // Fix scroll bug
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+  });
+
+  const debouncedFetchMoments = useCallback(
+    debounce(() => fetchMoments(), 300),
+    [filters, pagination.page, sortOption]
+  );
+
+  // Fetch cafe list
   useEffect(() => {
-    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
+    (async () => {
+      try {
+        const res = await getAllCafeNames();
+        setCafes(res.data || []);
+      } catch {
+        toast.error("Không thể tải danh sách quán cafe");
+      }
+    })();
   }, []);
-
-  const handleViewMoment = (m) => {
-    setSelectedMoment(m);
-    setIsModalOpen(true);
-  };
 
   const fetchMoments = async () => {
     try {
-      let sortParam = "desc";
-      if (sortOption === "lowToHigh") sortParam = "priceAsc";
-      if (sortOption === "highToLow") sortParam = "priceDesc";
-      if (sortOption === "oldest") sortParam = "asc";
+      setLoading(true);
 
-      const res = await getAllMoments({
-        page,
-        limit,
-        sort: sortParam,
-        search: searchQuery,
-      });
+      // merge params
+      const params = {
+        page: pagination.page,
+        limit: pagination.limit,
+        ...(sortOption.sortBy && sortOption.sortOrder ? sortOption : {}),
+        ...filters, // note: filters store strings for date/min/max
+      };
+
+      // Remove empty values
+      const cleanParams = Object.fromEntries(
+        Object.entries(params).filter(
+          ([_, v]) => v !== "" && v !== null && v !== undefined
+        )
+      );
+
+      // Convert prices to numbers if provided
+      if (cleanParams.minPrice !== undefined)
+        cleanParams.minPrice = Number(cleanParams.minPrice);
+      if (cleanParams.maxPrice !== undefined)
+        cleanParams.maxPrice = Number(cleanParams.maxPrice);
+
+      // If both provided and min > max -> swap them (prevent empty result)
+      if (
+        typeof cleanParams.minPrice === "number" &&
+        typeof cleanParams.maxPrice === "number" &&
+        cleanParams.minPrice > cleanParams.maxPrice
+      ) {
+        const tmp = cleanParams.minPrice;
+        cleanParams.minPrice = cleanParams.maxPrice;
+        cleanParams.maxPrice = tmp;
+      }
+
+      const res = await getAllMoments(cleanParams);
+
       setMoments(res.data.data || []);
-      setTotal(res.data.total || 0);
+      setPagination((prev) => ({
+        ...prev,
+        total: res.data.pagination?.totalItems || 0,
+        totalPages: res.data.pagination?.totalPages || 1,
+      }));
     } catch (err) {
-      console.error("Lỗi khi lấy danh sách moments:", err);
+      console.error("Error fetching moments:", err);
+      toast.error("Không thể tải danh sách moments");
       setMoments([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Auto fetch when filters/page/sort change
   useEffect(() => {
     fetchMoments();
-  }, [page, sortDirection, searchQuery]);
+  }, [filters, pagination.page, sortOption]);
 
-  const totalPages = Math.ceil(total / limit);
+  // Reset page when filters change
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [filters]);
 
-  const toggleSortDirection = () => {
-    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  // Actions
+  const handleViewMoment = (m) => {
+    setSelectedMoment(m);
+    setIsModalOpen(true);
   };
 
-  const handleDeleteMoment = (id) => {
-    Swal.fire({
+  const handleDeleteMoment = async (id) => {
+    const result = await Swal.fire({
       title: "Xác nhận xóa?",
       text: "Hành động này không thể hoàn tác!",
       icon: "warning",
@@ -91,52 +143,26 @@ const MomentManage = () => {
       confirmButtonText: "Xóa",
       cancelButtonText: "Hủy",
       background: "#fff8f0",
-      backdrop: `
-        rgba(253, 230, 208, 0.4)
-      `,
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          await deleteMoment(id);
-          Swal.fire({
-            title: "Đã xóa!",
-            text: "Moment đã được xóa thành công.",
-            icon: "success",
-            background: "#fff8f0",
-          });
-          fetchMoments();
-        } catch (err) {
-          console.error("Lỗi khi xóa moment:", err);
-          Swal.fire({
-            title: "Lỗi!",
-            text: "Không thể xóa moment.",
-            icon: "error",
-            background: "#fff8f0",
-          });
-        }
-      }
+      backdrop: `rgba(253, 230, 208, 0.4)`,
     });
+
+    if (result.isConfirmed) {
+      await deleteMoment(id);
+      toast.success("Moment đã được xóa thành công");
+      fetchMoments();
+    }
   };
 
-  const filteredMoments = Array.isArray(moments)
-    ? moments.filter(
-        (moment) =>
-          moment.description
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          moment.cafeId?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : [];
-
-  const sortedMoments = [...moments].sort((a, b) => {
-    if (sortOption === "lowToHigh") return a.totalPrice - b.totalPrice;
-    if (sortOption === "highToLow") return b.totalPrice - a.totalPrice;
-    if (sortOption === "newest")
-      return new Date(b.dateTime) - new Date(a.dateTime);
-    if (sortOption === "oldest")
-      return new Date(a.dateTime) - new Date(b.dateTime);
-    return 0;
-  });
+  const handleResetFilters = () => {
+    setFilters({
+      cafeId: "",
+      timeOfDay: "",
+      minPrice: "",
+      maxPrice: "",
+      dateFrom: "",
+      dateTo: "",
+    });
+  };
 
   return (
     <div className="p-4 md:p-6 bg-white min-h-screen font-sans">
@@ -159,37 +185,17 @@ const MomentManage = () => {
         </button>
       </div>
 
-      {/* Search + Sort */}
-      <div className="mb-8 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        {/* Search */}
-        <div className="relative w-full md:w-1/3">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="text-amber-700 w-5 h-5" />
-          </div>
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo quán cafe hoặc mô tả..."
-            className="w-full pl-10 pr-4 py-2 md:py-3 border border-amber-300 rounded-xl bg-white shadow-md focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent placeholder-amber-900/80 text-amber-900"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+      {/* Bộ lọc */}
+      <MomentFilter
+        isOpen={isFilterOpen}
+        onToggle={() => setIsFilterOpen(!isFilterOpen)}
+        cafes={cafes}
+        filters={filters}
+        setFilters={setFilters}
+        onApply={fetchMoments}
+        onReset={handleResetFilters}
+      />
 
-        {/* Sort */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-amber-900 font-medium">Sắp xếp:</label>
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="px-3 py-2 border border-amber-300 rounded-lg bg-white shadow-md focus:ring-2 focus:ring-amber-600 focus:border-transparent text-amber-900"
-          >
-            <option value="lowToHigh">Giá tiền: Thấp → Cao</option>
-            <option value="highToLow">Giá tiền: Cao → Thấp</option>
-            <option value="newest">Ngày thêm: Mới nhất</option>
-            <option value="oldest">Ngày thêm: Cũ nhất</option>
-          </select>
-        </div>
-      </div>
       {/* Table */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden backdrop-blur-sm border border-amber-100">
         <div className="overflow-x-auto">
@@ -197,9 +203,7 @@ const MomentManage = () => {
             <thead className="bg-gradient-to-r from-amber-600 to-amber-800">
               <tr>
                 <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-amber-50 uppercase tracking-wider">
-                  <div className="flex items-center gap-1">
-                    <span>Quán Cafe</span>
-                  </div>
+                  Quán Cafe
                 </th>
                 <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-amber-50 uppercase tracking-wider">
                   Hình ảnh
@@ -208,16 +212,11 @@ const MomentManage = () => {
                   Mô tả
                 </th>
                 <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-amber-50 uppercase tracking-wider">
-                  <div className="flex items-center gap-1">
-                    <span>Tổng giá</span>
-                  </div>
+                  Tổng giá
                 </th>
                 <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-amber-50 uppercase tracking-wider">
-                  <div className="flex items-center gap-1">
-                    <span>Ngày giờ</span>
-                  </div>
+                  Thời gian
                 </th>
-
                 <th className="px-4 md:px-6 py-3 text-right text-xs md:text-sm font-semibold text-amber-50 uppercase tracking-wider">
                   Hành động
                 </th>
@@ -232,8 +231,8 @@ const MomentManage = () => {
                     </div>
                   </td>
                 </tr>
-              ) : sortedMoments.length > 0 ? (
-                sortedMoments.map((moment) => (
+              ) : moments.length > 0 ? (
+                moments.map((moment) => (
                   <tr
                     key={moment._id}
                     className="hover:bg-amber-50/50 transition-colors duration-150"
@@ -265,11 +264,13 @@ const MomentManage = () => {
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4 text-amber-800">
-                      <div className="flex items-center gap-1 min-w-[180px]">
+                      <div className="flex flex-col">
                         <span>{formatDateTime(moment.dateTime)}</span>
+                        <span className="text-sm text-amber-600">
+                          {getTimeOfDay(moment.dateTime)}
+                        </span>
                       </div>
                     </td>
-
                     <td className="px-4 md:px-6 py-4 text-right">
                       <div className="flex justify-end gap-1 md:gap-2">
                         <button
@@ -305,6 +306,15 @@ const MomentManage = () => {
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Coffee size={32} className="text-amber-600" />
                       <span>Không tìm thấy moment nào</span>
+                      <button
+                        onClick={() => {
+                          resetFilters();
+                          setSearchQuery("");
+                        }}
+                        className="text-amber-600 hover:text-amber-800 underline"
+                      >
+                        Xóa bộ lọc
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -313,43 +323,6 @@ const MomentManage = () => {
           </table>
         </div>
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6 gap-2">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className="flex items-center gap-1 px-3 py-2 rounded-lg border border-amber-300 text-amber-800 hover:bg-amber-100 disabled:opacity-50 transition-colors"
-          >
-            <ArrowLeft size={16} />
-            <span className="hidden sm:inline">Trước</span>
-          </button>
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPage(p)}
-              className={`px-3 py-2 rounded-lg border ${
-                page === p
-                  ? "bg-gradient-to-b from-amber-600 to-amber-700 text-white border-amber-600 shadow-inner"
-                  : "border-amber-300 text-amber-800 hover:bg-amber-100"
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-
-          <button
-            disabled={page === totalPages}
-            onClick={() => setPage(page + 1)}
-            className="flex items-center gap-1 px-3 py-2 rounded-lg border border-amber-300 text-amber-800 hover:bg-amber-100 disabled:opacity-50 transition-colors"
-          >
-            <span className="hidden sm:inline">Sau</span>
-            <ArrowRight size={16} />
-          </button>
-        </div>
-      )}
 
       {/* Modal */}
       <MomentModal

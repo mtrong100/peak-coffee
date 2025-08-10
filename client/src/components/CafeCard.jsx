@@ -3,7 +3,7 @@ import { MapPin, Star, Coffee, ChevronRight } from "lucide-react";
 
 const CafeCard = ({ cafe }) => {
   return (
-    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col border border-amber-100 hover:border-amber-200 group">
+    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col border border-gray-100 hover:border-gray-200 group">
       {/* Ảnh với overlay */}
       <div className="relative">
         {cafe.imageUrl && (

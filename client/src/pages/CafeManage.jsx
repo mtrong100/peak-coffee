@@ -1,174 +1,148 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
+  Coffee,
   Plus,
   Pencil,
   Trash2,
-  Coffee,
-  Search,
-  ChevronDown,
-  ChevronUp,
   Star,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getAllCafes, deleteCafe } from "../api/cafeApi";
+import CafeFilter from "../components/CafeFilter";
 import Swal from "sweetalert2";
+import toast from "react-hot-toast";
+import { debounce } from "../utils/debounce";
 
 const CafeManage = () => {
   const navigate = useNavigate();
-
   const [cafes, setCafes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortDirection, setSortDirection] = useState("desc");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    search: "",
+    minRating: "",
+    sortBy: "createdAt",
+    sortOrder: "desc",
+    page: 1,
+    limit: 10,
+  });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 1,
+  });
 
-  // Fetch data từ API
-  useEffect(() => {
-    const fetchCafes = async () => {
-      try {
-        const res = await getAllCafes();
-        setCafes(res.data);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách cafe:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCafes();
-  }, []);
-
-  // Toggle sort
-  const toggleSortDirection = () => {
-    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-  };
-
-  // Filter theo tên hoặc địa chỉ
-  const filteredCafes = cafes.filter(
-    (cafe) =>
-      cafe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cafe.address.toLowerCase().includes(searchQuery.toLowerCase())
+  const debouncedSearch = useCallback(
+    debounce((value) => {
+      setFilters((prev) => ({ ...prev, search: value, page: 1 }));
+    }, 500),
+    []
   );
-
-  // Sort theo rating
-  const sortedCafes = [...filteredCafes].sort((a, b) =>
-    sortDirection === "asc" ? a.rating - b.rating : b.rating - a.rating
-  );
-
-  // FIX SCROLL BUG
-  useEffect(() => {
-    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
 
   const fetchCafes = async () => {
+    setLoading(true);
     try {
-      const res = await getAllCafes();
-      setCafes(res.data);
-    } catch (err) {
-      console.error("Lỗi khi lấy danh sách cafe:", err);
+      const res = await getAllCafes(filters);
+      setCafes(res.data.data);
+      setPagination({
+        total: res.data.pagination.totalItems,
+        totalPages: res.data.pagination.totalPages,
+      });
+    } catch {
+      toast.error("Lỗi khi tải danh sách quán cafe");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchCafes();
-  }, []);
+  }, [filters]);
 
-  const handleDeleteCafe = (id) => {
+  const handleDelete = (id) => {
     Swal.fire({
-      title: "Bạn có chắc muốn xóa?",
+      title: "Xóa quán cafe?",
       text: "Hành động này không thể hoàn tác!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#6c757d",
       confirmButtonText: "Xóa",
       cancelButtonText: "Hủy",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
           await deleteCafe(id);
-          Swal.fire("Đã xóa!", "Quán cafe đã được xóa thành công.", "success");
-          fetchCafes(); // reload danh sách
-        } catch (err) {
-          console.error("Lỗi khi xóa cafe:", err);
-          Swal.fire("Lỗi!", "Không thể xóa quán cafe.", "error");
+          toast.success("Xóa thành công");
+          fetchCafes();
+        } catch {
+          toast.error("Không thể xóa quán cafe");
         }
       }
     });
   };
 
   return (
-    <div className="p-6 bg-white min-h-screen font-sans">
+    <div className="p-6 bg-white min-h-screen">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
           <Coffee className="text-amber-600 w-9 h-9" />
-          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
             Quản lý quán cafe
           </h1>
         </div>
         <button
           onClick={() => navigate("/create-cafe")}
-          className="flex items-center gap-2 bg-amber-800 hover:bg-amber-700 text-white px-5 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+          className="flex items-center gap-2 bg-amber-800 hover:bg-amber-700 text-white px-5 py-3 rounded-lg"
         >
-          <Plus size={18} className="text-amber-100" />
-          <span className="font-medium">Thêm quán cafe</span>
+          <Plus size={18} />
+          <span>Thêm quán cafe</span>
         </button>
       </div>
 
-      {/* Search + Sort */}
-      <div className="mb-8 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div className="relative w-full md:w-1/3">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="text-amber-500 w-5 h-5" />
-          </div>
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo tên hoặc địa chỉ..."
-            className="w-full pl-10 pr-4 py-2 md:py-3 border border-amber-300 rounded-xl bg-white shadow-md focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent placeholder-amber-900/80 text-amber-900"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-amber-900">
-          <span>Sắp xếp theo đánh giá:</span>
-          <button
-            onClick={toggleSortDirection}
-            className="flex items-center gap-1 bg-gradient-to-b from-amber-100 to-amber-50 hover:from-amber-200 hover:to-amber-100 px-3 py-2 rounded-lg shadow-inner transition-all duration-200 border border-amber-200"
-          >
-            {sortDirection === "asc" ? (
-              <>
-                <span>Thấp đến cao</span>
-                <ChevronUp size={16} />
-              </>
-            ) : (
-              <>
-                <span>Cao đến thấp</span>
-                <ChevronDown size={16} />
-              </>
-            )}
-          </button>
-        </div>
-      </div>
+      {/* Bộ lọc */}
+      <CafeFilter
+        filters={filters}
+        onSearchChange={(value) => {
+          setFilters((prev) => ({ ...prev, search: value }));
+          debouncedSearch(value);
+        }}
+        onRatingChange={(value) =>
+          setFilters((prev) => ({ ...prev, minRating: value || "", page: 1 }))
+        }
+        onSortChange={(sortBy, sortOrder) =>
+          setFilters((prev) => ({ ...prev, sortBy, sortOrder, page: 1 }))
+        }
+        onReset={() =>
+          setFilters({
+            search: "",
+            minRating: "",
+            sortBy: "createdAt",
+            sortOrder: "desc",
+            page: 1,
+            limit: 10,
+          })
+        }
+      />
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden backdrop-blur-sm border border-amber-100">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden backdrop-blur-sm border border-amber-100 mb-6">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-amber-100">
             <thead className="bg-gradient-to-r from-amber-600 to-amber-800">
               <tr>
                 {[
-                  "Tên quán",
-                  "Hình ảnh",
-                  "Địa chỉ",
-                  "Mô tả",
-                  "Đánh giá",
-                  "Hành động",
+                  { name: "Tên quán", key: "name" },
+                  { name: "Hình ảnh", key: "image" },
+                  { name: "Địa chỉ", key: "address" },
+                  { name: "Mô tả", key: "description" },
+                  { name: "Đánh giá", key: "rating" },
+                  { name: "Hành động", key: "actions" },
                 ].map((h) => (
                   <th
-                    key={h}
+                    key={h.key}
                     className="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wider"
                   >
-                    {h}
+                    {h.name}
                   </th>
                 ))}
               </tr>
@@ -176,14 +150,16 @@ const CafeManage = () => {
             <tbody className="bg-white divide-y divide-amber-100">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-6 text-stone-500">
-                    Đang tải dữ liệu...
+                  <td colSpan="6" className="text-center py-8">
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+                    </div>
                   </td>
                 </tr>
-              ) : sortedCafes.length > 0 ? (
-                sortedCafes.map((cafe, index) => (
+              ) : cafes.length > 0 ? (
+                cafes.map((cafe) => (
                   <tr
-                    key={cafe._id || index}
+                    key={cafe._id}
                     className="hover:bg-amber-50/50 transition-colors duration-150"
                   >
                     <td className="px-6 py-4 text-sm font-medium text-stone-900 min-w-[180px]">
@@ -246,7 +222,7 @@ const CafeManage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center py-6 text-stone-500">
+                  <td colSpan="6" className="text-center py-6 text-stone-500">
                     Không tìm thấy quán cafe
                   </td>
                 </tr>
@@ -255,6 +231,43 @@ const CafeManage = () => {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center mt-6">
+          <div className="flex items-center gap-2 bg-white border border-amber-300 rounded-lg shadow-sm px-3 py-1">
+            <button
+              onClick={() => setFilters((p) => ({ ...p, page: p.page - 1 }))}
+              disabled={filters.page === 1}
+              className={`p-2 rounded-md transition-colors ${
+                filters.page === 1
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-amber-600 hover:bg-amber-100"
+              }`}
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            {/* Hiển thị số trang */}
+            <span className="text-sm font-medium text-gray-700">
+              Trang <span className="text-amber-600">{filters.page}</span> /{" "}
+              {pagination.totalPages}
+            </span>
+
+            <button
+              onClick={() => setFilters((p) => ({ ...p, page: p.page + 1 }))}
+              disabled={filters.page === pagination.totalPages}
+              className={`p-2 rounded-md transition-colors ${
+                filters.page === pagination.totalPages
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-amber-600 hover:bg-amber-100"
+              }`}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import Coffee01 from "../assets/images/coffee_01.jpg";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import HeroSection from "../components/HeroSection";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -22,119 +23,8 @@ export default function LandingPage() {
   return (
     <div className="bg-stone-50 min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-[url('https://i.postimg.cc/5NCP22P2/IMG-20250325-174109.jpg')] bg-cover bg-center h-[90vh] min-h-[600px] flex items-center justify-center text-center overflow-hidden">
-        {/* Dark overlay with gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/60 to-black/50"></div>
+      <HeroSection />
 
-        {/* Floating coffee beans decoration */}
-        <div className="absolute inset-0 opacity-20">
-          <Coffee className="absolute top-1/4 left-1/4 w-16 h-16 text-amber-300 animate-float" />
-          <Coffee className="absolute top-1/3 right-1/4 w-14 h-14 text-amber-300 animate-float-delay" />
-          <Coffee className="absolute bottom-1/4 left-1/3 w-12 h-12 text-amber-300 animate-float" />
-        </div>
-
-        <div className="relative z-10 text-white max-w-5xl px-6">
-          {/* Animated title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
-          >
-            <span className="bg-gradient-to-r from-amber-300 to-amber-200 bg-clip-text text-transparent">
-              Lưu giữ từng khoảnh khắc cafe
-            </span>
-          </motion.h1>
-
-          {/* Subtitle with animation */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-base md:text-2xl text-amber-100 mb-8 max-w-2xl mx-auto leading-relaxed"
-          >
-            Nơi bạn có thể lưu lại những quán cafe đã ghé, những ly đồ uống yêu
-            thích và những câu chuyện thú vị.
-          </motion.p>
-
-          {/* Premium CTA Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate("/moment")}
-              className="group relative overflow-hidden bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 text-white px-10 py-4 rounded-xl font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300"
-            >
-              {/* Button shine effect */}
-              <span className="absolute inset-0 bg-gradient-to-r from-amber-500/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
-
-              {/* Button content */}
-              <div className="relative z-10 flex items-center justify-center gap-3">
-                <div className="p-2 bg-amber-500/20 rounded-full">
-                  <Coffee className="w-6 h-6 text-amber-200 group-hover:text-white transition-colors" />
-                </div>
-                <span className="text-lg tracking-wide">Bắt đầu ngay</span>
-                <motion.div
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 2,
-                    ease: "easeInOut",
-                  }}
-                >
-                  <ChevronRight className="w-5 h-5 text-amber-200 group-hover:text-white transition-colors" />
-                </motion.div>
-              </div>
-            </motion.button>
-
-            {/* Secondary Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate("/cafe")}
-              className="group flex items-center gap-2 px-6 py-3.5 rounded-xl font-medium text-amber-100 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-amber-200/20 hover:border-amber-200/40 transition-all duration-300"
-            >
-              <MapPin className="w-5 h-5 text-amber-200 group-hover:text-white" />
-              <span>Khám phá quán cafe</span>
-            </motion.button>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-12 flex flex-wrap justify-center gap-6 text-amber-100"
-          >
-            <div className="flex items-center gap-2">
-              <Bookmark className="w-5 h-5 text-amber-300" />
-              <span>10,000+ khoảnh khắc</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Coffee className="w-5 h-5 text-amber-300" />
-              <span>2,000+ quán cafe</span>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          animate={{ y: [0, 15, 0] }}
-          transition={{
-            repeat: Infinity,
-            duration: 2,
-            ease: "easeInOut",
-          }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-amber-200"
-        >
-          <ChevronRight className="w-8 h-8 rotate-90" />
-        </motion.div>
-      </section>
       {/* About Section */}
       <section className="py-16 px-6 mx-auto text-center relative overflow-hidden">
         {/* Background gradient decor */}

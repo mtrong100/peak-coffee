@@ -12,7 +12,7 @@ import { formatDateTime } from "../utils/formatDateTime";
 
 const MomentCard = ({ moment }) => {
   return (
-    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col border border-amber-100 hover:border-amber-200">
+    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col border border-gray-100 hover:border-gray-200">
       {/* Ảnh */}
       <div className="relative">
         {moment.imageUrl && (
