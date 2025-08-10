@@ -217,8 +217,8 @@ export default function MomentPage() {
                 disabled={page === totalPages}
                 className={`flex items-center gap-1 px-4 py-2 rounded-lg border ${
                   page === totalPages
-                    ? "border-amber-200 text-amber-300 cursor-not-allowed"
-                    : "border-amber-300 text-amber-700 hover:bg-amber-100"
+                    ? "border-amber-200 text-amber-700 cursor-not-allowed"
+                    : "border-amber-300 text-amber-900 hover:bg-amber-100"
                 } transition-colors`}
               >
                 <span>Trang sau</span>

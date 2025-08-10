@@ -2,7 +2,7 @@ import Moment from "../models/moment.model.js";
 
 export const getAllMoments = async (req, res) => {
   try {
-    const { page = 1, limit = 10, sort = "desc", cafeId } = req.query;
+    const { page = 1, limit = 10, sort, cafeId } = req.query;
 
     const filter = {};
     if (cafeId) filter.cafeId = cafeId;

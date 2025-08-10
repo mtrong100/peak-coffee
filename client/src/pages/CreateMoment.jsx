@@ -14,10 +14,18 @@ import { getAllCafeNames } from "../api/cafeApi";
 import { createMoment } from "../api/momentApi";
 import toast from "react-hot-toast";
 
-const CreateMoment = () => {
-  const navigate = useNavigate();
+const formatNumber = (value) => {
+  if (!value) return "";
+  const num = Number(value.toString().replace(/\D/g, ""));
+  return num.toLocaleString("en-US");
+};
 
-  // State form
+const parseNumber = (value) => {
+  return value ? Number(value.toString().replace(/\D/g, "")) : "";
+};
+
+export default function CreateMoment() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     cafeId: "",
     selectedDrinks: [{ drinkName: "", price: "", quantity: "" }],
@@ -26,15 +34,14 @@ const CreateMoment = () => {
     description: "",
     dateTime: "",
   });
-
-  // FIX SCROLL BUG
-  useEffect(() => {
-    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
   const [cafes, setCafes] = useState([]);
 
-  // Lấy danh sách cafe để fill dropdown
+  // Scroll to top
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  // Lấy danh sách cafe
   useEffect(() => {
     const fetchCafes = async () => {
       try {
@@ -47,20 +54,33 @@ const CreateMoment = () => {
     fetchCafes();
   }, []);
 
-  // Handle thay đổi input
+  // Thay đổi input chung
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "totalPrice") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formatNumber(value),
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
-  // Handle drinks change
+  // Thay đổi đồ uống
   const handleDrinkChange = (index, field, value) => {
     const updatedDrinks = [...formData.selectedDrinks];
-    updatedDrinks[index][field] = value;
+    if (field === "price") {
+      updatedDrinks[index][field] = formatNumber(value);
+    } else if (field === "quantity") {
+      updatedDrinks[index][field] = value.replace(/\D/g, "");
+    } else {
+      updatedDrinks[index][field] = value;
+    }
     setFormData((prev) => ({ ...prev, selectedDrinks: updatedDrinks }));
   };
 
-  // Add drink row
+  // Thêm đồ uống
   const addDrink = () => {
     setFormData((prev) => ({
       ...prev,
@@ -71,30 +91,33 @@ const CreateMoment = () => {
     }));
   };
 
-  // Remove drink row
+  // Xóa đồ uống
   const removeDrink = (index) => {
-    const updated = formData.selectedDrinks.filter((_, i) => i !== index);
-    setFormData((prev) => ({ ...prev, selectedDrinks: updated }));
+    setFormData((prev) => ({
+      ...prev,
+      selectedDrinks: prev.selectedDrinks.filter((_, i) => i !== index),
+    }));
   };
 
-  // Handle submit
+  // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createMoment(formData);
+      const payload = {
+        ...formData,
+        totalPrice: parseNumber(formData.totalPrice),
+        selectedDrinks: formData.selectedDrinks.map((d) => ({
+          ...d,
+          price: parseNumber(d.price),
+          quantity: Number(d.quantity) || 0,
+        })),
+      };
+      await createMoment(payload);
       toast.success("Tạo thành công");
+      navigate("/moment-manage");
     } catch (err) {
       console.error("Lỗi khi tạo moment:", err);
       toast.error("Tạo không thành công");
-    } finally {
-      setFormData({
-        cafeId: "",
-        selectedDrinks: [{ drinkName: "", price: "", quantity: "" }],
-        totalPrice: "",
-        imageUrl: "",
-        description: "",
-        dateTime: "",
-      });
     }
   };
 
@@ -103,16 +126,16 @@ const CreateMoment = () => {
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold text-stone-800 flex items-center gap-3">
+          <h2 className="text-xl md:text-3xl font-bold flex items-center gap-3">
             <Coffee className="text-amber-600 w-8 h-8" />
             <span className="bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
-              Thêm khoảng khắc mới
+              Thêm khoảnh khắc
             </span>
           </h2>
           <button
             onClick={() => navigate("/moment-manage")}
             type="button"
-            className="flex items-center gap-2 text-stone-600 hover:text-amber-700"
+            className="flex items-center gap-2 text-stone-600 hover:text-amber-700 transition-colors"
           >
             <ArrowLeft size={20} />
             <span className="font-medium">Quay lại</span>
@@ -151,7 +174,7 @@ const CreateMoment = () => {
               {formData.selectedDrinks.map((drink, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-12 gap-3 items-center"
+                  className="grid md:grid-cols-4 gap-3 items-center"
                 >
                   <input
                     type="text"
@@ -160,33 +183,33 @@ const CreateMoment = () => {
                     onChange={(e) =>
                       handleDrinkChange(index, "drinkName", e.target.value)
                     }
-                    className="col-span-4 px-4 py-2 border border-stone-200 rounded-lg"
+                    className=" px-4 py-2 border border-stone-200 rounded-lg"
                     required
                   />
                   <input
-                    type="number"
+                    type="text"
                     placeholder="Giá"
                     value={drink.price}
                     onChange={(e) =>
                       handleDrinkChange(index, "price", e.target.value)
                     }
-                    className="col-span-3 px-4 py-2 border border-stone-200 rounded-lg"
+                    className=" px-4 py-2 border border-stone-200 rounded-lg"
                     required
                   />
                   <input
-                    type="number"
+                    type="text"
                     placeholder="Số lượng"
                     value={drink.quantity}
                     onChange={(e) =>
                       handleDrinkChange(index, "quantity", e.target.value)
                     }
-                    className="col-span-3 px-4 py-2 border border-stone-200 rounded-lg"
+                    className=" px-4 py-2 border border-stone-200 rounded-lg"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => removeDrink(index)}
-                    className="col-span-2 p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+                    className=" p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -207,7 +230,7 @@ const CreateMoment = () => {
                 Tổng giá
               </label>
               <input
-                type="number"
+                type="text"
                 name="totalPrice"
                 value={formData.totalPrice}
                 onChange={handleChange}
@@ -261,10 +284,10 @@ const CreateMoment = () => {
             </div>
 
             {/* Submit */}
-            <div className="flex justify-end pt-4 border-t border-stone-100">
+            <div className="flex md:justify-end pt-4 border-t border-stone-100">
               <button
                 type="submit"
-                className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-3 rounded-lg hover:opacity-90 flex items-center gap-2 shadow-md hover:shadow-lg transition"
+                className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-3 rounded-lg hover:opacity-90 flex items-center gap-2 shadow-md hover:shadow-lg transition w-full justify-center md:w-auto"
               >
                 <Save size={20} />
                 <span className="font-medium">Lưu</span>
@@ -275,6 +298,4 @@ const CreateMoment = () => {
       </div>
     </section>
   );
-};
-
-export default CreateMoment;
+}

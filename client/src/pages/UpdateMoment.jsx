@@ -1,28 +1,61 @@
-import { getAllCafeNames } from "../api/cafeApi";
-import { getMomentById, updateMoment } from "../api/momentApi";
-import toast from "react-hot-toast";
+// UpdateMoment.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Coffee, Save, ArrowLeft } from "lucide-react";
+import { Coffee, Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
+import { getAllCafeNames } from "../api/cafeApi";
+import { getMomentById, updateMoment } from "../api/momentApi";
 
-const UpdateMoment = () => {
+const formatNumber = (value) => {
+  if (value === "" || value == null) return "";
+  const num = Number(value.toString().replace(/\D/g, ""));
+  return isNaN(num) ? "" : num.toLocaleString("en-US");
+};
+const parseNumber = (value) =>
+  value === "" || value == null
+    ? 0
+    : Number(value.toString().replace(/\D/g, ""));
+
+// Convert ISO (from backend) -> "YYYY-MM-DDTHH:MM" (local) for datetime-local input
+const isoToInputLocal = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+};
+
+// Convert "YYYY-MM-DDTHH:MM" (local input) -> ISO string (UTC) for backend
+const inputLocalToISO = (input) => {
+  if (!input) return "";
+  const d = new Date(input); // interprets as local time
+  return d.toISOString();
+};
+
+export default function UpdateMoment() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     cafeId: "",
+    selectedDrinks: [{ drinkName: "", price: "", quantity: "" }],
     totalPrice: "",
     imageUrl: "",
     description: "",
     dateTime: "",
   });
   const [cafes, setCafes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // FIX SCROLL BUG
+  // scroll top
   useEffect(() => {
-    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // fetch moment + cafes
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -34,10 +67,15 @@ const UpdateMoment = () => {
         const m = momentRes.data;
         setFormData({
           cafeId: m.cafeId?._id || "",
-          totalPrice: m.totalPrice || "",
+          selectedDrinks: m.selectedDrinks?.map((d) => ({
+            drinkName: d.drinkName ?? "",
+            price: d.price != null ? formatNumber(d.price) : "",
+            quantity: d.quantity ?? "",
+          })) || [{ drinkName: "", price: "", quantity: "" }],
+          totalPrice: m.totalPrice != null ? formatNumber(m.totalPrice) : "",
           imageUrl: m.imageUrl || "",
           description: m.description || "",
-          dateTime: m.dateTime ? m.dateTime.slice(0, 16) : "",
+          dateTime: m.dateTime ? isoToInputLocal(m.dateTime) : "",
         });
 
         setCafes(
@@ -46,6 +84,8 @@ const UpdateMoment = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Không thể tải dữ liệu moment hoặc danh sách cafe");
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -53,29 +93,77 @@ const UpdateMoment = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "totalPrice") {
+      setFormData((prev) => ({ ...prev, [name]: formatNumber(value) }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
+
+  const handleDrinkChange = (index, field, value) => {
+    const updated = [...formData.selectedDrinks];
+    if (field === "price") {
+      // format display
+      updated[index][field] = formatNumber(value);
+    } else if (field === "quantity") {
+      // only allow non-negative integers
+      const v = value.toString().replace(/\D/g, "");
+      updated[index][field] = v;
+    } else {
+      updated[index][field] = value;
+    }
+    setFormData((prev) => ({ ...prev, selectedDrinks: updated }));
+  };
+
+  const addDrink = () =>
+    setFormData((prev) => ({
+      ...prev,
+      selectedDrinks: [
+        ...prev.selectedDrinks,
+        { drinkName: "", price: "", quantity: "" },
+      ],
+    }));
+
+  const removeDrink = (index) =>
+    setFormData((prev) => ({
+      ...prev,
+      selectedDrinks: prev.selectedDrinks.filter((_, i) => i !== index),
+    }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await updateMoment(id, formData);
+      const payload = {
+        ...formData,
+        dateTime: formData.dateTime ? inputLocalToISO(formData.dateTime) : null,
+        totalPrice: parseNumber(formData.totalPrice),
+        selectedDrinks: formData.selectedDrinks.map((d) => ({
+          drinkName: d.drinkName,
+          price: parseNumber(d.price),
+          quantity: Number(d.quantity) || 0,
+        })),
+      };
+
+      await updateMoment(id, payload);
       toast.success("Cập nhật Moment thành công!");
+      navigate("/moment-manage");
     } catch (error) {
       console.error("Error updating moment:", error);
       toast.error("Cập nhật Moment thất bại!");
     }
   };
 
+  if (loading) return <div className="p-6">Đang tải dữ liệu...</div>;
+
   return (
     <section className="bg-stone-50 min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold text-stone-800 flex items-center gap-3">
+          <h2 className="text-3xl font-bold flex items-center gap-3">
             <Coffee className="text-amber-600 w-8 h-8" />
             <span className="bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
-              Cập nhật Moment
+              Cập nhật khoảnh khắc
             </span>
           </h2>
           <button
@@ -130,18 +218,77 @@ const UpdateMoment = () => {
               />
             </div>
 
+            {/* Selected Drinks */}
+            <div className="space-y-3">
+              <label className="block text-stone-700 font-medium">
+                Đồ uống đã chọn
+              </label>
+              {formData.selectedDrinks.map((drink, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-12 gap-3 items-center"
+                >
+                  <input
+                    type="text"
+                    placeholder="Tên đồ uống"
+                    value={drink.drinkName}
+                    onChange={(e) =>
+                      handleDrinkChange(index, "drinkName", e.target.value)
+                    }
+                    className="col-span-4 px-4 py-2 border border-stone-200 rounded-lg"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Giá"
+                    value={drink.price}
+                    onChange={(e) =>
+                      handleDrinkChange(index, "price", e.target.value)
+                    }
+                    className="col-span-3 px-4 py-2 border border-stone-200 rounded-lg"
+                    required
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Số lượng"
+                    value={drink.quantity}
+                    onChange={(e) =>
+                      handleDrinkChange(index, "quantity", e.target.value)
+                    }
+                    className="col-span-3 px-4 py-2 border border-stone-200 rounded-lg"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeDrink(index)}
+                    className="col-span-2 p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addDrink}
+                className="flex items-center gap-2 text-amber-600 hover:text-amber-800 font-medium"
+              >
+                <Plus size={18} /> Thêm đồ uống
+              </button>
+            </div>
+
             {/* Total Price */}
             <div>
               <label className="block text-stone-700 font-medium mb-2">
                 Tổng giá
               </label>
               <input
-                type="number"
+                type="text"
                 name="totalPrice"
                 value={formData.totalPrice}
                 onChange={handleChange}
-                min="0"
                 className="w-full px-4 py-3 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500"
+                placeholder="Ví dụ: 25,000"
               />
             </div>
 
@@ -181,7 +328,7 @@ const UpdateMoment = () => {
                 className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-3 rounded-lg hover:opacity-90 flex items-center gap-2 shadow-md hover:shadow-lg"
               >
                 <Save size={20} />
-                <span>Cập nhật Moment</span>
+                <span>Lưu</span>
               </button>
             </div>
           </form>
@@ -189,6 +336,4 @@ const UpdateMoment = () => {
       </div>
     </section>
   );
-};
-
-export default UpdateMoment;
+}
