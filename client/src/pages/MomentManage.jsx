@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Coffee, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Coffee, Eye, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import toast from "react-hot-toast";
@@ -167,21 +167,21 @@ const MomentManage = () => {
   return (
     <div className="p-4 md:p-6 bg-white min-h-screen font-sans">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-gradient-to-br from-amber-600 to-amber-800 rounded-xl shadow-md">
-            <Coffee className="text-amber-50 w-7 h-7" />
+            <Camera className="text-amber-50 w-7 h-7" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
+          <h1 className="text-2xl md:text-3xl uppercase font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
             Quản lý khoảnh khắc
           </h1>
         </div>
         <button
           onClick={() => navigate("/create-moment")}
-          className="flex items-center gap-2 bg-amber-800 hover:bg-amber-700 text-white px-5 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+          className="flex items-center gap-2 px-6 py-4 rounded-lg bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white font-bold uppercase shadow-md transform transition duration-300 ease-in-out hover:scale-105 hover:shadow-[0_0_15px_rgba(255,140,0,0.7)] hover:brightness-110 active:scale-95 justify-center"
         >
-          <Plus size={18} className="text-amber-100" />
-          <span className="font-medium">Thêm khoảnh khắc</span>
+          <Plus size={20} className="text-white" />
+          <span>Thêm khoảnh khắc</span>
         </button>
       </div>
 
@@ -275,7 +275,7 @@ const MomentManage = () => {
                       <div className="flex justify-end gap-1 md:gap-2">
                         <button
                           onClick={() => handleViewMoment(moment)}
-                          className="p-1 md:p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors duration-200 hover:scale-110"
+                          className="p-5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors duration-200 hover:scale-110"
                           title="Xem chi tiết"
                         >
                           <Eye size={16} />
@@ -284,14 +284,14 @@ const MomentManage = () => {
                           onClick={() =>
                             navigate(`/update-moment/${moment._id}`)
                           }
-                          className="p-1 md:p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 hover:scale-110 transition-all"
+                          className="p-5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 hover:scale-110 transition-all"
                           title="Sửa"
                         >
                           <Pencil size={16} />
                         </button>
                         <button
                           onClick={() => handleDeleteMoment(moment._id)}
-                          className="p-1 md:p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:scale-110 transition-all"
+                          className="p-5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:scale-110 transition-all"
                           title="Xóa"
                         >
                           <Trash2 size={16} />

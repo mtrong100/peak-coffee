@@ -2,20 +2,27 @@
 import React, { useEffect, useState } from "react";
 import { getAllMoments } from "../api/momentApi";
 import MomentCard from "../components/MomentCard";
-import { Search, Coffee, Calendar, ArrowDownUp } from "lucide-react";
+import {
+  Search,
+  Coffee,
+  Calendar,
+  ArrowDownUp,
+  SlidersHorizontal,
+} from "lucide-react";
 
 const timeOfDayOptions = [
-  { label: "Tất cả", value: "" },
-  { label: "Sáng (5h–11h)", value: "morning" },
-  { label: "Trưa (11h–14h)", value: "noon" },
-  { label: "Chiều (14h–18h)", value: "afternoon" },
-  { label: "Tối (18h–22h)", value: "evening" },
+  { value: "", label: "Tất cả thời gian" },
+  { value: "morning", label: "Buổi sáng" },
+  { value: "noon", label: "Buổi trưa" },
+  { value: "afternoon", label: "Buổi chiều" },
+  { value: "evening", label: "Buổi tối" },
 ];
 
 export default function MomentPage() {
   const [moments, setMoments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pagination, setPagination] = useState({});
+  const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
     timeOfDay: "",
@@ -26,6 +33,11 @@ export default function MomentPage() {
     page: 1,
     limit: 6,
   });
+
+  // FIX SCROLL BUG
+  useEffect(() => {
+    document.body.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   // format số có dấu chấm phân cách hàng nghìn
   const formatNumber = (val) => {
@@ -51,13 +63,26 @@ export default function MomentPage() {
     }
   };
 
+  const resetFilter = () => {
+    setFilters({
+      search: "",
+      timeOfDay: "",
+      minPrice: "",
+      maxPrice: "",
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      page: 1,
+      limit: 6,
+    });
+  };
+
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line
   }, [filters]);
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="space-y-4">
@@ -70,8 +95,20 @@ export default function MomentPage() {
             </p>
           </div>
 
+          {/* Nút toggle filter chỉ hiện trên mobile */}
+          <button
+            onClick={() => setShowFilter(!showFilter)}
+            className="md:hidden flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 text-amber-700 hover:bg-amber-50"
+          >
+            <SlidersHorizontal size={18} />
+            Bộ lọc
+          </button>
+
           {/* Filter controls */}
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-md mb-6">
+          <div
+            className={`bg-white border border-gray-200 rounded-xl p-4 shadow-md mb-6 
+              ${showFilter ? "block" : "hidden"} sm:block`}
+          >
             <div className="flex flex-col md:grid md:grid-cols-6 gap-4">
               {/* Search */}
               <div className="md:col-span-2">
@@ -185,6 +222,16 @@ export default function MomentPage() {
                   </select>
                 </div>
               </div>
+            </div>
+
+            {/* Reset Button */}
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={resetFilter}
+                className="py-4 px-6 bg-amber-600 hover:bg-amber-700 w-full md:w-auto text-white rounded-lg font-medium transition-colors"
+              >
+                Đặt lại bộ lọc
+              </button>
             </div>
           </div>
         </div>

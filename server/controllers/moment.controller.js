@@ -58,27 +58,41 @@ export const getAllMoments = async (req, res) => {
       filter.dateTime.$lte = d;
     }
 
-    // timeOfDay (local timezone +07:00)
     const timeRanges = {
-      morning: { start: 6, end: 12 }, // 06:00 - 11:59
-      afternoon: { start: 12, end: 18 }, // 12:00 - 17:59
-      evening: { start: 18, end: 24 }, // 18:00 - 23:59
-      night: { start: 0, end: 6 }, // 00:00 - 05:59
+      // 04:00 - 10:59
+      morning: { start: 4, end: 10 },
+      // 11:00 - 14:59
+      noon: { start: 11, end: 14 },
+      // 15:00 - 17:59
+      afternoon: { start: 15, end: 17 },
+      // 18:00 - 23:59
+      evening: { start: 18, end: 23 },
     };
 
     if (timeOfDay && timeRanges[timeOfDay]) {
       const r = timeRanges[timeOfDay];
-      // Use $expr with $hour + timezone
+
+      // Giờ VN = (UTC hour + 7) % 24
       filter.$expr = {
         $and: [
           {
             $gte: [
-              { $hour: { date: "$dateTime", timezone: "+07:00" } },
+              {
+                $mod: [
+                  { $add: [{ $hour: "$dateTime" }, 7] }, // +7 giờ để ra giờ VN
+                  24,
+                ],
+              },
               r.start,
             ],
           },
           {
-            $lt: [{ $hour: { date: "$dateTime", timezone: "+07:00" } }, r.end],
+            $lte: [
+              {
+                $mod: [{ $add: [{ $hour: "$dateTime" }, 7] }, 24],
+              },
+              r.end,
+            ],
           },
         ],
       };

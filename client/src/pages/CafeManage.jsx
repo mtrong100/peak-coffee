@@ -85,16 +85,18 @@ const CafeManage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
-          <Coffee className="text-amber-600 w-9 h-9" />
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
+          <div className="p-2 bg-gradient-to-br from-amber-600 to-amber-800 rounded-xl shadow-md">
+            <Coffee className="text-amber-50 w-7 h-7" />
+          </div>
+          <h1 className="text-2xl uppercase md:text-3xl font-bold bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
             Quản lý quán cafe
           </h1>
         </div>
         <button
           onClick={() => navigate("/create-cafe")}
-          className="flex items-center gap-2 bg-amber-800 hover:bg-amber-700 text-white px-5 py-3 rounded-lg"
+          className="flex items-center gap-2 px-6 py-4 rounded-lg bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white font-bold uppercase shadow-md transform transition duration-300 ease-in-out hover:scale-105 hover:shadow-[0_0_15px_rgba(255,140,0,0.7)] hover:brightness-110 active:scale-95 justify-center"
         >
-          <Plus size={18} />
+          <Plus size={18} className="text-white" />
           <span>Thêm quán cafe</span>
         </button>
       </div>
@@ -206,13 +208,13 @@ const CafeManage = () => {
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => navigate(`/update-cafe/${cafe._id}`)}
-                          className="p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 hover:scale-105 transition-all duration-200"
+                          className="p-5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 hover:scale-105 transition-all duration-200"
                         >
                           <Pencil size={18} />
                         </button>
                         <button
                           onClick={() => handleDeleteCafe(cafe._id)}
-                          className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:scale-105 transition-all duration-200"
+                          className="p-5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:scale-105 transition-all duration-200"
                         >
                           <Trash2 size={18} />
                         </button>

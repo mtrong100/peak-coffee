@@ -1,11 +1,9 @@
 import Cafe from "../models/cafe.model.js";
-import mongoose from "mongoose";
 
 export const getAllCafes = async (req, res) => {
   try {
-    // 1️⃣ Lấy query params & gán giá trị mặc định
     const {
-      search,
+      search = "",
       minRating,
       maxRating,
       sortBy = "createdAt",
@@ -14,47 +12,44 @@ export const getAllCafes = async (req, res) => {
       limit = 10,
     } = req.query;
 
-    // 2️⃣ Tạo filter cơ bản
     const filter = {};
 
-    // 🔍 Tìm kiếm theo tên hoặc địa chỉ (không phân biệt hoa thường)
-    if (search?.trim()) {
+    // Tìm kiếm theo tên hoặc địa chỉ
+    if (search.trim()) {
+      const keyword = search.trim();
       filter.$or = [
-        { name: { $regex: search.trim(), $options: "i" } },
-        { address: { $regex: search.trim(), $options: "i" } },
+        { name: { $regex: keyword, $options: "i" } },
+        { address: { $regex: keyword, $options: "i" } },
       ];
     }
 
-    // ⭐ Lọc theo khoảng rating
+    // Lọc theo rating
     if (minRating !== undefined || maxRating !== undefined) {
       filter.rating = {};
-      if (minRating !== undefined) filter.rating.$gte = Number(minRating);
-      if (maxRating !== undefined) filter.rating.$lte = Number(maxRating);
+      if (minRating !== undefined && minRating !== "")
+        filter.rating.$gte = Number(minRating);
+      if (maxRating !== undefined && maxRating !== "")
+        filter.rating.$lte = Number(maxRating);
     }
 
-    // 3️⃣ Xử lý sort
-    const sortFields = {
-      name: "name",
-      rating: "rating",
-      createdAt: "createdAt",
-    };
+    // Sắp xếp
+    const validSortFields = ["name", "rating", "createdAt"];
     const sortOption = {
-      [sortFields[sortBy] || "createdAt"]:
+      [validSortFields.includes(sortBy) ? sortBy : "createdAt"]:
         sortOrder.toLowerCase() === "asc" ? 1 : -1,
     };
 
-    // 4️⃣ Xử lý phân trang
+    // Phân trang
     const pageNumber = Math.max(1, parseInt(page, 10));
     const limitNumber = Math.max(1, parseInt(limit, 10));
     const skip = (pageNumber - 1) * limitNumber;
 
-    // 5️⃣ Lấy tổng số bản ghi & dữ liệu
+    // Truy vấn DB song song
     const [total, cafes] = await Promise.all([
       Cafe.countDocuments(filter),
-      Cafe.find(filter).sort(sortOption).skip(skip).limit(limitNumber),
+      Cafe.find(filter).sort(sortOption).skip(skip).limit(limitNumber).lean(),
     ]);
 
-    // 6️⃣ Trả dữ liệu
     res.status(200).json({
       success: true,
       data: cafes,
@@ -69,7 +64,7 @@ export const getAllCafes = async (req, res) => {
     console.error("Error fetching cafes:", err);
     res.status(500).json({
       success: false,
-      error: "Lỗi khi lấy danh sách quán cafe.",
+      message: "Lỗi khi lấy danh sách quán cafe.",
     });
   }
 };

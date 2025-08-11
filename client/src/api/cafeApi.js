@@ -11,18 +11,28 @@ export const getAllCafes = (params = {}) => {
   };
 
   // Gộp default và params truyền vào
-  const finalParams = { ...defaultParams, ...params };
+  const mergedParams = { ...defaultParams, ...params };
 
-  // Xóa các param rỗng/null/undefined để tránh gửi lung tung
-  Object.keys(finalParams).forEach((key) => {
-    if (
-      finalParams[key] === "" ||
-      finalParams[key] === null ||
-      finalParams[key] === undefined
-    ) {
-      delete finalParams[key];
-    }
-  });
+  // Xử lý param: trim string, parse number nếu cần, xóa param rỗng
+  const finalParams = Object.entries(mergedParams).reduce(
+    (acc, [key, value]) => {
+      if (value === null || value === undefined || value === "") return acc;
+
+      // Trim string
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (trimmed !== "") acc[key] = trimmed;
+      }
+      // Ép kiểu số cho page/limit/rating
+      else if (["page", "limit", "minRating", "maxRating"].includes(key)) {
+        acc[key] = Number(value);
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {}
+  );
 
   return axiosClient.get("/cafes", { params: finalParams });
 };
