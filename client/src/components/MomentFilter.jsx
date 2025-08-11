@@ -24,7 +24,7 @@ export default function MomentFilter({
       <div className="flex justify-between items-center md:hidden mb-5">
         <button
           onClick={() => setShowFilter(!showFilter)}
-          className="flex items-center gap-2 bg-gray-600 text-white py-4 px-6 rounded-lg shadow hover:bg-gray-700 transition-colors"
+          className="flex items-center gap-2 bg-amber-900 text-white py-3 px-5 text-lg font-semibold rounded-lg shadow-lg transition-colors"
         >
           <Filter size={18} />
           Bộ lọc

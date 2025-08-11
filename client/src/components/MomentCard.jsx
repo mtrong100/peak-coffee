@@ -14,12 +14,12 @@ const MomentCard = ({ moment }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col border border-gray-100 hover:border-gray-200">
       {/* Ảnh */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
         {moment.imageUrl && (
           <img
             src={moment.imageUrl}
             alt={moment.description || "Moment"}
-            className="w-full h-48 md:h-64 object-cover"
+            className="w-full h-48 md:h-64 object-cover hover:scale-110 duration-500"
           />
         )}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
@@ -45,14 +45,14 @@ const MomentCard = ({ moment }) => {
         </div>
 
         {/* Địa chỉ */}
-        <p className="text-sm text-amber-800 flex items-center gap-2 mb-3">
-          <MapPin size={14} className="text-amber-600" />
+        <p className="text-sm text-amber-800 flex items-center gap-2 mb-4">
+          <MapPin size={20} className="text-amber-600 flex-shrink-0" />
           <span>{moment.cafeId?.address}</span>
         </p>
 
         {/* Mô tả */}
         {moment.description && (
-          <p className="text-sm text-stone-600 mb-4 line-clamp-3 font-semibold">
+          <p className="text-sm text-stone-600 mb-4 font-semibold">
             {moment.description}
           </p>
         )}

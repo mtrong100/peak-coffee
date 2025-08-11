@@ -5,12 +5,12 @@ const CafeCard = ({ cafe }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col border border-gray-100 hover:border-gray-200 group">
       {/* Ảnh với overlay */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
         {cafe.imageUrl && (
           <img
             src={cafe.imageUrl}
             alt={cafe.name}
-            className="w-full h-48 md:h-56 object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-48 md:h-56 object-cover transition-transform duration-500 group-hover:scale-110"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
@@ -22,7 +22,7 @@ const CafeCard = ({ cafe }) => {
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-xl font-bold text-amber-900 flex items-center gap-2">
             <Coffee size={18} className="text-amber-600" />
-            <span className="line-clamp-1">{cafe.name}</span>
+            <span className="">{cafe.name}</span>
           </h3>
           <ChevronRight
             size={18}
@@ -32,13 +32,13 @@ const CafeCard = ({ cafe }) => {
 
         {/* Địa chỉ */}
         <p className="text-sm text-amber-800 flex items-center gap-2 mb-3">
-          <MapPin size={16} className="text-amber-600 flex-shrink-0" />
-          <span className="line-clamp-1">{cafe.address}</span>
+          <MapPin size={20} className="text-amber-600 flex-shrink-0" />
+          <span className="">{cafe.address}</span>
         </p>
 
         {/* Mô tả */}
         {cafe.description && (
-          <p className="font-medium text-stone-600 mb-4 line-clamp-2">
+          <p className="font-medium text-stone-600 mb-4 text-sm">
             {cafe.description}
           </p>
         )}

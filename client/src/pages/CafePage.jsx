@@ -20,7 +20,7 @@ const CafePage = () => {
     sortBy: "rating",
     sortOrder: "desc",
     page: 1,
-    limit: 9,
+    limit: 15,
   });
   const [pagination, setPagination] = useState({});
   const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +64,7 @@ const CafePage = () => {
       sortBy: "rating",
       sortOrder: "desc",
       page: 1,
-      limit: 9,
+      limit: 15,
     });
   };
 
@@ -83,7 +83,7 @@ const CafePage = () => {
           </div>
           {/* Mobile filter toggle */}
           <button
-            className="md:hidden flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-300 text-amber-700 hover:bg-amber-50"
+            className="flex items-center gap-2 bg-amber-900 text-white py-3 px-5 text-lg font-semibold rounded-lg shadow-lg transition-colors"
             onClick={() => setShowFilters((prev) => !prev)}
           >
             <SlidersHorizontal size={18} />

@@ -148,7 +148,7 @@ const MomentManage = () => {
 
     if (result.isConfirmed) {
       await deleteMoment(id);
-      toast.success("Moment đã được xóa thành công");
+      toast.success("Khoảnh khắc đã được xóa thành công");
       fetchMoments();
     }
   };
@@ -167,7 +167,7 @@ const MomentManage = () => {
   return (
     <div className="p-4 md:p-6 bg-white min-h-screen font-sans">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-gradient-to-br from-amber-600 to-amber-800 rounded-xl shadow-md">
             <Camera className="text-amber-50 w-7 h-7" />

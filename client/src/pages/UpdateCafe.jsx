@@ -161,7 +161,7 @@ export default function UpdateCafe() {
                 className="bg-gradient-to-r from-amber-600 to-amber-800 text-white px-6 py-3 rounded-lg hover:opacity-90 flex items-center gap-2 shadow-md hover:shadow-lg transition-all w-full justify-center md:w-auto"
               >
                 <Save size={20} />
-                <span className="font-medium">Cập nhật quán cafe</span>
+                <span className="font-medium">Lưu</span>
               </button>
             </div>
           </form>
