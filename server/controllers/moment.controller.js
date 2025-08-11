@@ -10,7 +10,7 @@ export const getAllMoments = async (req, res) => {
       dateFrom,
       dateTo,
       timeOfDay,
-      sortBy = "createdAt",
+      sortBy = "dateTime", // ✅ Mặc định sort theo dateTime
       sortOrder = "desc",
       page = 1,
       limit = 10,
@@ -28,7 +28,6 @@ export const getAllMoments = async (req, res) => {
       try {
         filter.cafeId = new mongoose.Types.ObjectId(cafeId);
       } catch (e) {
-        // invalid id -> no results
         return res
           .status(400)
           .json({ success: false, message: "Invalid cafeId" });
@@ -46,42 +45,33 @@ export const getAllMoments = async (req, res) => {
     }
 
     // date range
-    if (dateFrom !== undefined && dateFrom !== "") {
+    if (dateFrom) {
       filter.dateTime = filter.dateTime || {};
       filter.dateTime.$gte = new Date(dateFrom);
     }
-    if (dateTo !== undefined && dateTo !== "") {
+    if (dateTo) {
       filter.dateTime = filter.dateTime || {};
-      // include whole day
       const d = new Date(dateTo);
       d.setHours(23, 59, 59, 999);
       filter.dateTime.$lte = d;
     }
 
+    // timeOfDay
     const timeRanges = {
-      // 04:00 - 10:59
       morning: { start: 4, end: 10 },
-      // 11:00 - 14:59
       noon: { start: 11, end: 14 },
-      // 15:00 - 17:59
       afternoon: { start: 15, end: 17 },
-      // 18:00 - 23:59
       evening: { start: 18, end: 23 },
     };
 
     if (timeOfDay && timeRanges[timeOfDay]) {
       const r = timeRanges[timeOfDay];
-
-      // Giờ VN = (UTC hour + 7) % 24
       filter.$expr = {
         $and: [
           {
             $gte: [
               {
-                $mod: [
-                  { $add: [{ $hour: "$dateTime" }, 7] }, // +7 giờ để ra giờ VN
-                  24,
-                ],
+                $mod: [{ $add: [{ $hour: "$dateTime" }, 7] }, 24],
               },
               r.start,
             ],
@@ -98,27 +88,25 @@ export const getAllMoments = async (req, res) => {
       };
     }
 
-    // Build sort option (note: sort by cafe name requires client-side sort after populate)
+    // ✅ Build sort option - default dateTime
     let sortOption = {};
     switch (sortBy) {
       case "price":
         sortOption.totalPrice = order;
         break;
       case "date":
+      case "dateTime": // hỗ trợ cả "date" và "dateTime"
         sortOption.dateTime = order;
         break;
       case "timeOfDay":
-        // no direct DB sort on computed local hour with populate approach; fallback to dateTime
         sortOption.dateTime = order;
         break;
       default:
-        sortOption.createdAt = order;
+        sortOption.dateTime = order; // ✅ Default sort by dateTime
     }
 
-    // total count
     const total = await Moment.countDocuments(filter);
 
-    // query with populate
     let moments = await Moment.find(filter)
       .populate("cafeId", "name address rating imageUrl")
       .sort(sortOption)
@@ -126,12 +114,12 @@ export const getAllMoments = async (req, res) => {
       .limit(limitNumber)
       .lean();
 
-    // if sortBy = 'cafe' -> sort after populate
+    // sort by cafe name after populate
     if (sortBy === "cafe") {
       const mul = order === 1 ? 1 : -1;
       moments.sort((a, b) => {
-        const an = a.cafeId && a.cafeId.name ? a.cafeId.name : "";
-        const bn = b.cafeId && b.cafeId.name ? b.cafeId.name : "";
+        const an = a.cafeId?.name || "";
+        const bn = b.cafeId?.name || "";
         return mul * an.localeCompare(bn);
       });
     }
