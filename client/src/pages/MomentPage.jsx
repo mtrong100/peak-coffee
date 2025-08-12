@@ -98,7 +98,7 @@ export default function MomentPage() {
           {/* Nút toggle filter chỉ hiện trên mobile */}
           <button
             onClick={() => setShowFilter(!showFilter)}
-            className="hidden md:flex items-center gap-2 bg-amber-900 text-white py-3 px-5 text-lg font-semibold rounded-lg shadow-lg transition-colors"
+            className="md:hidden flex items-center gap-2 bg-amber-900 text-white py-3 px-5 text-lg font-semibold rounded-lg shadow-lg transition-colors"
           >
             <SlidersHorizontal size={18} />
             Bộ lọc
