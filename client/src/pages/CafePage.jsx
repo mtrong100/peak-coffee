@@ -83,7 +83,7 @@ const CafePage = () => {
           </div>
           {/* Mobile filter toggle */}
           <button
-            className="flex items-center gap-2 bg-amber-900 text-white py-3 px-5 text-lg font-semibold rounded-lg shadow-lg transition-colors"
+            className="md:flex hidden items-center gap-2 bg-amber-900 text-white py-3 px-5 text-lg font-semibold rounded-lg shadow-lg transition-colors"
             onClick={() => setShowFilters((prev) => !prev)}
           >
             <SlidersHorizontal size={18} />
